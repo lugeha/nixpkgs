@@ -67,10 +67,10 @@ in
       };
 
       listenAddress = mkOption {
-        type = types.str;
-        default = "";
-        example = "example.com";
-        description = lib.mdDoc "Listen on a specific IP address or hostname.";
+        type = types.lstOf types.str;
+        default = [];
+        example = [ "example.com" ];
+        description = lib.mdDoc "Listen on a specific IP addresses or hostnames.";
       };
 
       port = mkOption {
@@ -121,7 +121,7 @@ in
       wantedBy = [ "multi-user.target" ];
       script = "${pkgs.git}/bin/git daemon --reuseaddr "
         + (optionalString (cfg.basePath != "") "--base-path=${cfg.basePath} ")
-        + (optionalString (cfg.listenAddress != "") "--listen=${cfg.listenAddress} ")
+        + (optionals (cfg.listenAddress != []) (concatMapStrings (x: "--listen=${x} ") cfg.listenAddress)
         + "--port=${toString cfg.port} --user=${cfg.user} --group=${cfg.group} ${cfg.options} "
         + "--verbose " + (optionalString cfg.exportAll "--export-all ")  + concatStringsSep " " cfg.repositories;
     };
